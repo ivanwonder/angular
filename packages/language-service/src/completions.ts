@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {AST, AstPath, AttrAst, Attribute, BoundDirectivePropertyAst, BoundElementPropertyAst, BoundEventAst, BoundTextAst, Element, ElementAst, NAMED_ENTITIES, Node as HtmlAst, NullTemplateVisitor, ReferenceAst, TagContentType, TemplateBinding, Text, getHtmlTagDefinition} from '@angular/compiler';
+import {AST, AstPath, AttrAst, Attribute, BoundDirectivePropertyAst, BoundElementPropertyAst, BoundEventAst, BoundTextAst, Element, ElementAst, NAMED_ENTITIES, Node as HtmlAst, NullTemplateVisitor, ReferenceAst, TagContentType, TemplateAst, TemplateBinding, Text, getHtmlTagDefinition} from '@angular/compiler';
 import {$$, $_, isAsciiLetter, isDigit} from '@angular/compiler/src/chars';
 
 import {AstResult} from './common';
@@ -337,7 +337,14 @@ function referenceAttributeValueCompletions(
   const dinfo = diagnosticInfoFromTemplateInfo(info);
   const visitor =
       new ExpressionVisitor(info, position, () => getExpressionScope(dinfo, path, false));
-  path.tail.visit(visitor, path.parentOf(path.tail));
+
+  // Find the reference's element, which contains all directives assignable to the reference.
+  let element: TemplateAst|undefined = path.tail;
+  while (!(element instanceof ElementAst) && path.parentOf(element)) {
+    element = path.parentOf(element);
+  }
+  if (!(element instanceof ElementAst)) return [];
+  path.tail.visit(visitor, element);
   return visitor.results;
 }
 

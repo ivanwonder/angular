@@ -53,32 +53,22 @@ export function locateSymbol(info: AstResult, position: number): SymbolInfo|unde
     };
     path.tail.visit(
         {
-          visitNgContent(ast) {},
-          visitEmbeddedTemplate(ast) {},
+          visitNgContent() {},
+          visitEmbeddedTemplate() {},
           visitElement(ast) {
+            // Find a component on the element, or a directive matching the element's name.
             const component = ast.directives.find(d => d.directive.isComponent);
-            if (component) {
-              compileTypeSummary = component.directive;
-              symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
-              symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.COMPONENT);
-              span = spanOf(ast);
-            } else {
-              // Find a directive that matches the element name
-              const directive = ast.directives.find(
-                  d => d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0);
-              if (directive) {
-                compileTypeSummary = directive.directive;
-                symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
-                symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.DIRECTIVE);
-                span = spanOf(ast);
-              }
-            }
+            const directive = component ||
+                ast.directives.find(
+                    d => d.directive.selector && d.directive.selector.indexOf(ast.name) >= 0);
+            if (directive) directive.visit(this, null);
+            span = spanOf(ast);
           },
           visitReference(ast) {
             symbol = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
             span = spanOf(ast);
           },
-          visitVariable(ast) {},
+          visitVariable() {},
           visitEvent(ast) {
             if (!attributeValueSymbol(ast.handler, /* inEvent */ true)) {
               symbol = findOutputBinding(info, path, ast);
@@ -122,10 +112,13 @@ export function locateSymbol(info: AstResult, position: number): SymbolInfo|unde
               }
             }
           },
-          visitText(ast) {},
+          visitText() {},
           visitDirective(ast) {
             compileTypeSummary = ast.directive;
+            const kind =
+                ast.directive.isComponent ? DirectiveKind.COMPONENT : DirectiveKind.DIRECTIVE;
             symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+            symbol = symbol && new OverrideKindSymbol(symbol, kind);
             span = spanOf(ast);
           },
           visitDirectiveProperty(ast) {

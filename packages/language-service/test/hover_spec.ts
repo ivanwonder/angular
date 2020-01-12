@@ -91,7 +91,7 @@ describe('hover', () => {
   it('should be able to find a reference to a component', () => {
     const fileName = mockHost.addCode(`
       @Component({
-        template: '«<ᐱtestᐱ-comp></test-comp>»'
+        template: '«<ᐱtestᐱ-comp>»</test-comp>'
       })
       export class MyComponent { }`);
     const marker = mockHost.getDefinitionMarkerFor(fileName, 'test');
