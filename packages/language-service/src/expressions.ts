@@ -194,3 +194,42 @@ export function getExpressionSymbol(
     return {symbol, span};
   }
 }
+
+export function getMethodSignature(
+    scope: SymbolTable, ast: AST, position: number, templateInfo: TemplateSource): Symbol|
+    undefined {
+  const path = findAstAt(ast, position, /* excludeEmpty */ true);
+  function getType(ast: AST): Symbol {
+    return new AstType(scope, templateInfo.query, {}, templateInfo.source).getType(ast);
+  }
+
+  let symbol: Symbol|undefined = undefined;
+
+  path.tail?.visit({
+    visitBinary(_ast) {},
+    visitChain(_ast) {},
+    visitConditional(_ast) {},
+    visitFunctionCall(_ast) {},
+    visitImplicitReceiver(_ast) {},
+    visitInterpolation(_ast) {},
+    visitKeyedRead(_ast) {},
+    visitKeyedWrite(_ast) {},
+    visitLiteralArray(_ast) {},
+    visitLiteralMap(_ast) {},
+    visitLiteralPrimitive(_ast) {},
+    visitMethodCall(ast) {
+      const receiverType = getType(ast.receiver);
+      symbol = receiverType && receiverType.members().get(ast.name);
+    },
+    visitPipe(_ast) {},
+    visitPrefixNot(_ast) {},
+    visitNonNullAssert(_ast) {},
+    visitPropertyRead(_ast) {},
+    visitPropertyWrite(_ast) {},
+    visitQuote(_ast) {},
+    visitSafeMethodCall(_ast) {},
+    visitSafePropertyRead(_ast) {},
+  });
+
+  return symbol;
+}

@@ -12,6 +12,7 @@ import {getTemplateCompletions} from './completions';
 import {getDefinitionAndBoundSpan, getTsDefinitionAndBoundSpan} from './definitions';
 import {getDeclarationDiagnostics, getTemplateDiagnostics, ngDiagnosticToTsDiagnostic} from './diagnostics';
 import {getTemplateHover, getTsHover} from './hover';
+import {getSignatureHelp} from './signature_help';
 import * as ng from './types';
 import {TypeScriptServiceHost} from './typescript_host';
 
@@ -97,5 +98,13 @@ class LanguageServiceImpl implements ng.LanguageService {
     // directive belongs to.
     const declarations = this.host.getDeclarations(fileName);
     return getTsHover(position, declarations, analyzedModules);
+  }
+
+  getSignatureHelp(fileName: string, position: number) {
+    const analyzedModules = this.host.getAnalyzedModules();  // same role as 'synchronizeHostData'
+    const templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
+    if (templateInfo) {
+      return getSignatureHelp(templateInfo, position);
+    }
   }
 }

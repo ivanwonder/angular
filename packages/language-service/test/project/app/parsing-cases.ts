@@ -134,4 +134,8 @@ export class TemplateReference {
   constNames = [{name: 'name'}] as const;
   private myField = 'My Field';
   strOrNumber: string|number = '';
+
+  test(a: string): number {
+    return 1
+  }
 }
