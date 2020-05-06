@@ -196,14 +196,15 @@ export function getExpressionSymbol(
 }
 
 export function getMethodSignature(
-    scope: SymbolTable, ast: AST, position: number, templateInfo: TemplateSource): Symbol|
-    undefined {
+    scope: SymbolTable, ast: AST, position: number,
+    templateInfo: TemplateSource): {symbol: Symbol, span: Span}|undefined|undefined {
   const path = findAstAt(ast, position, /* excludeEmpty */ true);
   function getType(ast: AST): Symbol {
     return new AstType(scope, templateInfo.query, {}, templateInfo.source).getType(ast);
   }
 
   let symbol: Symbol|undefined = undefined;
+  let span: Span|undefined = undefined;
 
   path.tail?.visit({
     visitBinary(_ast) {},
@@ -220,6 +221,7 @@ export function getMethodSignature(
     visitMethodCall(ast) {
       const receiverType = getType(ast.receiver);
       symbol = receiverType && receiverType.members().get(ast.name);
+      span = ast.span;
     },
     visitPipe(_ast) {},
     visitPrefixNot(_ast) {},
@@ -231,5 +233,9 @@ export function getMethodSignature(
     visitSafePropertyRead(_ast) {},
   });
 
-  return symbol;
+  if (symbol && span) {
+    return {
+      symbol, span,
+    }
+  }
 }
