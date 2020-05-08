@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {AST, AstPath as AstPathBase, ASTWithSource, RecursiveAstVisitor} from '@angular/compiler';
+import {AST, AstPath as AstPathBase, ASTWithSource, MethodCall, RecursiveAstVisitor} from '@angular/compiler';
 
 import {AstType} from './expression_type';
 import {BuiltinType, Span, Symbol, SymbolTable, TemplateSource} from './types';
@@ -214,7 +214,7 @@ export function getMethodSignature(
   let argumentCount: number = 0;
   let argumentIndex: number = 0;
 
-  path.tail?.visit({
+  path.first(MethodCall)?.visit({
     visitBinary(_ast) {},
     visitChain(_ast) {},
     visitConditional(_ast) {},

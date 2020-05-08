@@ -241,6 +241,9 @@ function probableMatchedSignature(
 
   let flag = true;
   _types.forEach((type, index) => {
+    if (!type) {
+      return;
+    }
     let tsType: ts.Type|undefined;
     if (type instanceof TypeWrapper) {
       tsType = type.tsType;
