@@ -249,7 +249,8 @@ function probableMatchedSignature(
       tsType = type.tsType;
     }
 
-    const signatureParamType = context.checker.getDeclaredTypeOfSymbol(signatureParam[index]);
+    const signatureParamType = context.checker.getTypeOfSymbolAtLocation(
+        signatureParam[index], signatureParam[index].getDeclarations()![0]);
     const res = (context.checker as any).isTypeAssignableTo(tsType, signatureParamType);
     if (!res) {
       flag = false;

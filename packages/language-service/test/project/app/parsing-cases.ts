@@ -135,7 +135,9 @@ export class TemplateReference {
   private myField = 'My Field';
   strOrNumber: string|number = '';
 
-  test(a: string, b?: number): number {
+  test(a: number, b?: string): string;
+  test(a: string, b?: number): number;
+  test(a: any): any {
     return 1
   }
 }

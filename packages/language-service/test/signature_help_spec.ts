@@ -33,24 +33,20 @@ describe('completions', () => {
     debugger
     const signatureHelp = ngLS.getSignatureHelp(TEST_TEMPLATE, marker.start);
     if (signatureHelp) {
-      const a = toText(signatureHelp.items);
+      const a = toText(signatureHelp.items[signatureHelp.selectedItemIndex]);
       expect(a).toBe('test(a: string, b: number | undefined): number');
     }
   });
 });
 
-function toText(displayParts: SignatureHelpItem[]): string {
-  return displayParts
-      .map(item => {
-        const prefix = item.prefixDisplayParts.map(parts => parts.text).join('');
-        const suffix = item.suffixDisplayParts.map(parts => parts.text).join('');
-        const separator = item.separatorDisplayParts.map(parts => parts.text).join('');
-        const param = item.parameters
-                          .map(params => {
-                            return params.displayParts.map(parts => parts.text).join('');
-                          })
-                          .join(separator);
-        return prefix + param + suffix
-      })
-      .join('');
+function toText(item: SignatureHelpItem): string {
+  const prefix = item.prefixDisplayParts.map(parts => parts.text).join('');
+  const suffix = item.suffixDisplayParts.map(parts => parts.text).join('');
+  const separator = item.separatorDisplayParts.map(parts => parts.text).join('');
+  const param = item.parameters
+                    .map(params => {
+                      return params.displayParts.map(parts => parts.text).join('');
+                    })
+                    .join(separator);
+  return prefix + param + suffix
 }

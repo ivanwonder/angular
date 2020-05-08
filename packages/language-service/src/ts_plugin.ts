@@ -87,6 +87,18 @@ export function create(info: tss.server.PluginCreateInfo): tss.LanguageService {
     return ngLS.getDefinitionAndBoundSpan(fileName, position);
   }
 
+  function getSignatureHelpItems(fileName: string, position: number): tss.SignatureHelpItems|
+      undefined {
+    if (!angularOnly) {
+      const result = tsLS.getSignatureHelpItems(fileName, position, {});
+      if (result) {
+        // If TS could answer the query, then return results immediately.
+        return result;
+      }
+    }
+    return ngLS.getSignatureHelp(fileName, position);
+  }
+
   const proxy: tss.LanguageService = Object.assign(
       // First clone the original TS language service
       {}, tsLS,
@@ -97,6 +109,7 @@ export function create(info: tss.server.PluginCreateInfo): tss.LanguageService {
         getSemanticDiagnostics,
         getDefinitionAtPosition,
         getDefinitionAndBoundSpan,
+        getSignatureHelpItems,
       });
   return proxy;
 }
