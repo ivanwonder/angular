@@ -1,5 +1,5 @@
 import {BoundElementPropertyAst, NullTemplateVisitor,} from '@angular/compiler';
-import {createTextSpanFromBounds, Signature, SignatureHelpItem, SignatureHelpItems, SignatureHelpParameter, SymbolDisplayPartKind,} from 'typescript/lib/tsserverlibrary';
+import {createTextSpanFromBounds, SignatureHelpItem, SignatureHelpItems, SignatureHelpParameter, SymbolDisplayPartKind,} from 'typescript/lib/tsserverlibrary';
 
 import {getExpressionScope} from './expression_diagnostics';
 import {getMethodSignature} from './expressions';
@@ -29,7 +29,7 @@ export function getSignatureHelp(templateInfo: ng.AstResult, position: number): 
           getMethodSignature(this.getExpressionScope(), ast.value, position, this.info.template);
       if (res) {
         symbol = res.symbol;
-        span = res.span;
+        span = offsetSpan(res.span, ast.value.sourceSpan.start);
         argumentCount = res.argumentCount;
         argumentIndex = res.argumentIndex;
         selectedItemIndex = res.selectedItemIndex;
@@ -43,9 +43,7 @@ export function getSignatureHelp(templateInfo: ng.AstResult, position: number): 
   });
   path.tail?.visit(visitor, null);
   if (symbol && span) {
-    return createSignatureHelp(
-        symbol, offsetSpan(span, templateInfo.template.span.start), selectedItemIndex,
-        argumentCount, argumentIndex);
+    return createSignatureHelp(symbol, span, selectedItemIndex, argumentCount, argumentIndex);
   }
 }
 

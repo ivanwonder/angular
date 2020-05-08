@@ -29,6 +29,7 @@ ts_library(
         "definitions_spec.ts",
         "diagnostics_spec.ts",
         "hover_spec.ts",
+        "signature_help_spec.ts",
     ],
     data = glob(["project/**/*"]),
     deps = [

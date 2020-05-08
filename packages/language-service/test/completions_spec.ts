@@ -414,14 +414,6 @@ describe('completions', () => {
       expectContain(completions, CompletionKind.PROPERTY, ['id', 'name']);
     });
 
-    it('should be able to complete property read', () => {
-      mockHost.override(TEST_TEMPLATE, `<h1 [model]="test('a', 1~{property-read})"></h1>`);
-      const marker = mockHost.getLocationMarkerFor(TEST_TEMPLATE, 'property-read');
-      debugger
-      const completions = ngLS.getSignatureHelp(TEST_TEMPLATE, marker.start);
-      // expectContain(completions, CompletionKind.PROPERTY, ['id', 'name']);
-    });
-
     it('should be able to complete an event', () => {
       mockHost.override(TEST_TEMPLATE, `<h1 (model)="~{cursor}"></h1>`);
       const marker = mockHost.getLocationMarkerFor(TEST_TEMPLATE, 'cursor');
