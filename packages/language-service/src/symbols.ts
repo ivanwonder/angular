@@ -121,6 +121,8 @@ export interface Symbol {
    */
   selectSignature(types: Symbol[]): Signature|undefined;
 
+  findProbableSignature(types: Symbol[]): number;
+
   /**
    * Return the type of the expression if this symbol is indexed by `argument`.
    * Sometimes we need the key of arguments to get the type of the expression, for example

@@ -14,6 +14,10 @@ export function getSignatureHelp(templateInfo: ng.AstResult, position: number): 
 
   let symbol: ng.Symbol|undefined;
   let span: ng.Span|undefined;
+  let selectedItemIndex: number = -1;
+  let argumentCount: number = 0;
+  let argumentIndex: number = 0;
+
   class ExpressionVisitor extends NullTemplateVisitor {
     constructor(
         private readonly info: ng.AstResult, private readonly position: number,
@@ -26,6 +30,9 @@ export function getSignatureHelp(templateInfo: ng.AstResult, position: number): 
       if (res) {
         symbol = res.symbol;
         span = res.span;
+        argumentCount = res.argumentCount;
+        argumentIndex = res.argumentIndex;
+        selectedItemIndex = res.selectedItemIndex;
       }
     }
   }
@@ -36,7 +43,9 @@ export function getSignatureHelp(templateInfo: ng.AstResult, position: number): 
   });
   path.tail?.visit(visitor, null);
   if (symbol && span) {
-    return createSignatureHelp(symbol, offsetSpan(span, templateInfo.template.span.start));
+    return createSignatureHelp(
+        symbol, offsetSpan(span, templateInfo.template.span.start), selectedItemIndex,
+        argumentCount, argumentIndex);
   }
 }
 
@@ -46,7 +55,9 @@ const SYMBOL_SPACE = SymbolDisplayPartKind[SymbolDisplayPartKind.space];
 const SYMBOL_KEYWORD = SymbolDisplayPartKind[SymbolDisplayPartKind.keyword];
 const SYMBOL_PROPERTY_NAME = SymbolDisplayPartKind[SymbolDisplayPartKind.propertyName];
 
-function createSignatureHelp(symbol: ng.Symbol, span: ng.Span): SignatureHelpItems|undefined {
+function createSignatureHelp(
+    symbol: ng.Symbol, span: ng.Span, selectedItemIndex: number, argumentCount: number,
+    argumentIndex: number): SignatureHelpItems|undefined {
   const signatures = symbol.signatures();
   const signatureHelpItem: SignatureHelpItem[] = signatures.map((sign) => {
     return {
@@ -90,8 +101,8 @@ function createSignatureHelp(symbol: ng.Symbol, span: ng.Span): SignatureHelpIte
   return {
     items: signatureHelpItem,
     applicableSpan: createTextSpanFromBounds(span.start, span.end),
-    argumentCount: 0,
-    argumentIndex: 0,
-    selectedItemIndex: 0,
+    argumentCount,
+    argumentIndex,
+    selectedItemIndex,
   };
 }

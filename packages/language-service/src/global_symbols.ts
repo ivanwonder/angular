@@ -58,6 +58,9 @@ export const createGlobalSymbolTable: (query: ng.SymbolQuery) => ng.SymbolTable 
               result: query.getBuiltinType(ng.BuiltinType.Any),
             };
           },
+          findProbableSignature(types: any) {
+            return -1;
+          },
           indexed: () => undefined,
           typeArguments: () => undefined,
         },

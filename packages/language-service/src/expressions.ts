@@ -196,8 +196,13 @@ export function getExpressionSymbol(
 }
 
 export function getMethodSignature(
-    scope: SymbolTable, ast: AST, position: number,
-    templateInfo: TemplateSource): {symbol: Symbol, span: Span}|undefined|undefined {
+    scope: SymbolTable, ast: AST, position: number, templateInfo: TemplateSource): {
+  symbol: Symbol,
+  span: Span,
+  selectedItemIndex: number,
+  argumentCount: number,
+  argumentIndex: number
+}|undefined|undefined {
   const path = findAstAt(ast, position, /* excludeEmpty */ true);
   function getType(ast: AST): Symbol {
     return new AstType(scope, templateInfo.query, {}, templateInfo.source).getType(ast);
@@ -205,6 +210,9 @@ export function getMethodSignature(
 
   let symbol: Symbol|undefined = undefined;
   let span: Span|undefined = undefined;
+  let selectedItemIndex: number = -1;
+  let argumentCount: number = 0;
+  let argumentIndex: number = 0;
 
   path.tail?.visit({
     visitBinary(_ast) {},
@@ -221,6 +229,12 @@ export function getMethodSignature(
     visitMethodCall(ast) {
       const receiverType = getType(ast.receiver);
       symbol = receiverType && receiverType.members().get(ast.name);
+      selectedItemIndex = symbol!.findProbableSignature(ast.args.map(arg => getType(arg)));
+      if (selectedItemIndex !== -1) {
+        argumentCount = symbol!.signatures()[selectedItemIndex].arguments.size;
+        const source = templateInfo.source.slice(ast.sourceSpan.start, position).split(',');
+        argumentIndex = source.length - 1;
+      }
       span = ast.span;
     },
     visitPipe(_ast) {},
@@ -235,7 +249,7 @@ export function getMethodSignature(
 
   if (symbol && span) {
     return {
-      symbol, span,
+      symbol, span, selectedItemIndex, argumentCount, argumentIndex,
     }
   }
 }

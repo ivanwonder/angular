@@ -313,6 +313,11 @@ class TypeWrapper implements Symbol {
     return selectSignature(this.tsType, this.context, types);
   }
 
+  findProbableSignature(types: Symbol[]): number {
+    return this.tsType.getCallSignatures().findIndex(
+        sign => probableMatchedSignature(sign, this.context, types));
+  }
+
   indexed(type: Symbol, value: any): Symbol|undefined {
     if (!(type instanceof TypeWrapper)) return;
 
@@ -427,6 +432,11 @@ class SymbolWrapper implements Symbol {
     return selectSignature(this.tsType, this.context, types);
   }
 
+  findProbableSignature(types: Symbol[]): number {
+    return this.tsType.getCallSignatures().findIndex(
+        sign => probableMatchedSignature(sign, this.context, types));
+  }
+
   indexed(_argument: Symbol): Symbol|undefined {
     return undefined;
   }
@@ -492,6 +502,10 @@ class DeclaredSymbol implements Symbol {
 
   selectSignature(types: Symbol[]): Signature|undefined {
     return this.type.selectSignature(types);
+  }
+
+  findProbableSignature(types: Symbol[]): number {
+    return -1;
   }
 
   typeArguments(): Symbol[]|undefined {
@@ -747,6 +761,11 @@ class PipeSymbol implements Symbol {
       }
     }
     return signature;
+  }
+
+  findProbableSignature(types: Symbol[]): number {
+    return this.tsType.getCallSignatures().findIndex(
+        sign => probableMatchedSignature(sign, this.context, types));
   }
 
   indexed(_argument: Symbol): Symbol|undefined {

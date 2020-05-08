@@ -227,6 +227,9 @@ export class AstType implements AstVisitor {
           undefined {
             return undefined;
           },
+      findProbableSignature(types: Symbol[]): number {
+        return -1;
+      },
       indexed(_argument): Symbol |
           undefined {
             return undefined;

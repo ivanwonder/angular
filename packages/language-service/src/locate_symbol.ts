@@ -359,6 +359,10 @@ class OverrideKindSymbol implements Symbol {
     return this.sym.selectSignature(types);
   }
 
+  findProbableSignature(types: Symbol[]): number {
+    return this.sym.findProbableSignature(types);
+  }
+
   indexed(argument: Symbol) {
     return this.sym.indexed(argument);
   }
