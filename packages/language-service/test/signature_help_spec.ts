@@ -34,6 +34,7 @@ describe('completions', () => {
     const signatureHelp = ngLS.getSignatureHelp(TEST_TEMPLATE, marker.start);
     if (signatureHelp) {
       const a = toText(signatureHelp.items);
+      expect(a).toBe('test(a: string, b: number | undefined): number');
     }
   });
 });
