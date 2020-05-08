@@ -232,6 +232,29 @@ function selectSignature(type: ts.Type, context: TypeContext, _types: Symbol[]):
   return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
 }
 
+function probableMatchedSignature(
+    signature: ts.Signature, context: TypeContext, _types: Symbol[]): boolean {
+  const signatureParam = signature.parameters;
+  if (_types.length > signatureParam.length) {
+    return false;
+  }
+
+  let flag = true;
+  _types.forEach((type, index) => {
+    let tsType: ts.Type|undefined;
+    if (type instanceof TypeWrapper) {
+      tsType = type.tsType;
+    }
+
+    const signatureParamType = context.checker.getDeclaredTypeOfSymbol(signatureParam[index]);
+    const res = (context.checker as any).isTypeAssignableTo(tsType, signatureParamType);
+    if (!res) {
+      flag = false;
+    }
+  });
+  return flag;
+}
+
 class TypeWrapper implements Symbol {
   constructor(public tsType: ts.Type, public context: TypeContext) {
     if (!tsType) {
