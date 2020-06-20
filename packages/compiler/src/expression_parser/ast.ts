@@ -108,6 +108,16 @@ export class Conditional extends AST {
   }
 }
 
+export class Nullish extends AST {
+  constructor(
+      span: ParseSpan, sourceSpan: AbsoluteSourceSpan, public leftExp: AST, public rightExp: AST) {
+    super(span, sourceSpan);
+  }
+  visit(visitor: AstVisitor, context: any = null): any {
+    return visitor.visitNullish(this, context);
+  }
+}
+
 export class PropertyRead extends ASTWithName {
   constructor(
       span: ParseSpan, sourceSpan: AbsoluteSourceSpan, nameSpan: AbsoluteSourceSpan,
@@ -364,6 +374,7 @@ export interface AstVisitor {
   visitBinary(ast: Binary, context: any): any;
   visitChain(ast: Chain, context: any): any;
   visitConditional(ast: Conditional, context: any): any;
+  visitNullish(ast: Nullish, context: any): any;
   visitFunctionCall(ast: FunctionCall, context: any): any;
   visitImplicitReceiver(ast: ImplicitReceiver, context: any): any;
   visitInterpolation(ast: Interpolation, context: any): any;
@@ -392,6 +403,10 @@ export interface AstVisitor {
 }
 
 export class RecursiveAstVisitor implements AstVisitor {
+  visitNullish(ast: Nullish, context: any) {
+    this.visit(ast.leftExp, context);
+    this.visit(ast.rightExp, context);
+  }
   visit(ast: AST, context?: any): any {
     // The default implementation just visits every node.
     // Classes that extend RecursiveAstVisitor should override this function
@@ -474,6 +489,9 @@ export class RecursiveAstVisitor implements AstVisitor {
 }
 
 export class AstTransformer implements AstVisitor {
+  visitNullish(ast: Nullish, context: any): AST {
+    return new Nullish(ast.span, ast.sourceSpan, ast.leftExp.visit(this), ast.rightExp.visit(this));
+  }
   visitImplicitReceiver(ast: ImplicitReceiver, context: any): AST {
     return ast;
   }
@@ -582,6 +600,14 @@ export class AstTransformer implements AstVisitor {
 // A transformer that only creates new nodes if the transformer makes a change or
 // a change is made a child node.
 export class AstMemoryEfficientTransformer implements AstVisitor {
+  visitNullish(ast: Nullish, context: any): AST {
+    const left = ast.leftExp.visit(this);
+    const right = ast.rightExp.visit(this);
+    if (left !== ast.leftExp || right !== ast.rightExp) {
+      return new Nullish(ast.span, ast.sourceSpan, left, right);
+    }
+    return ast;
+  }
   visitImplicitReceiver(ast: ImplicitReceiver, context: any): AST {
     return ast;
   }
