@@ -79,6 +79,7 @@ describe('parser', () => {
     });
 
     it('should parse expressions', () => {
+      debugger
       checkAction('true && true');
       checkAction('true || false');
     });

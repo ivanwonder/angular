@@ -322,6 +322,9 @@ class _AstToIrVisitor implements cdAst.AstVisitor {
       private _localResolver: LocalResolver, private _implicitReceiver: o.Expression,
       private bindingId: string, private interpolationFunction: InterpolationFunction|undefined,
       private baseSourceSpan?: ParseSourceSpan, private implicitReceiverAccesses?: Set<string>) {}
+  visitNullish(ast: cdAst.Nullish, context: any) {
+    throw new Error('Method not implemented.');
+  }
 
   visitBinary(ast: cdAst.Binary, mode: _Mode): any {
     let op: o.BinaryOperator;
@@ -703,6 +706,9 @@ class _AstToIrVisitor implements cdAst.AstVisitor {
       return (this._nodeMap.get(ast) || ast).visit(visitor);
     };
     return ast.visit({
+      visitNullish(ast: cdAst.Nullish) {
+        return null;
+      },
       visitBinary(ast: cdAst.Binary) {
         return null;
       },
@@ -777,6 +783,9 @@ class _AstToIrVisitor implements cdAst.AstVisitor {
       return ast.some(ast => visit(visitor, ast));
     };
     return ast.visit({
+      visitNullish(ast: cdAst.Nullish): boolean {
+        return visit(this, ast.leftExp) || visit(this, ast.rightExp);
+      },
       visitBinary(ast: cdAst.Binary): boolean {
         return visit(this, ast.left) || visit(this, ast.right);
       },

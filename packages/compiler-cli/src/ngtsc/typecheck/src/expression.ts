@@ -7,6 +7,7 @@
  */
 
 import {AST, AstVisitor, ASTWithSource, Binary, BindingPipe, Chain, Conditional, EmptyExpr, FunctionCall, ImplicitReceiver, Interpolation, KeyedRead, KeyedWrite, LiteralArray, LiteralMap, LiteralPrimitive, MethodCall, NonNullAssert, PrefixNot, PropertyRead, PropertyWrite, Quote, SafeMethodCall, SafePropertyRead} from '@angular/compiler';
+import {Nullish} from '@angular/compiler/src/compiler';
 import * as ts from 'typescript';
 
 import {TypeCheckingConfig} from './api';
@@ -52,6 +53,9 @@ class AstTranslator implements AstVisitor {
   constructor(
       private maybeResolve: (ast: AST) => (ts.Expression | null),
       private config: TypeCheckingConfig) {}
+  visitNullish(ast: Nullish, context: any) {
+    throw new Error('Method not implemented.');
+  }
 
   translate(ast: AST): ts.Expression {
     // Skip over an `ASTWithSource` as its `visit` method calls directly into its ast's `visit`,
@@ -308,6 +312,9 @@ class AstTranslator implements AstVisitor {
  * Ivy checker can emulate this bug when needed.
  */
 class VeSafeLhsInferenceBugDetector implements AstVisitor {
+  visitNullish(ast: Nullish, context: any) {
+    throw new Error('Method not implemented.');
+  }
   private static SINGLETON = new VeSafeLhsInferenceBugDetector();
 
   static veWillInferAnyFor(ast: SafeMethodCall|SafePropertyRead) {
