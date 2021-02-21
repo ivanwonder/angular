@@ -20,7 +20,7 @@ export class UndecoratedChildMigration implements Migration {
   apply(clazz: ClassDeclaration, host: MigrationHost): ts.Diagnostic|null {
     // This migration looks at NgModules and considers the directives (and pipes) it declares.
     // It verifies that these classes have decorators.
-    const moduleMeta = host.metadata.getNgModuleMetadata(new Reference(clazz));
+    const moduleMeta = host.metadata.getNgModuleMetadata(new Reference(clazz), clazz);
     if (moduleMeta === null) {
       // Not an NgModule; don't care.
       return null;

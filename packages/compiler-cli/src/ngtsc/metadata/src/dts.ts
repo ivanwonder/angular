@@ -9,7 +9,7 @@
 import * as ts from 'typescript';
 
 import {Reference} from '../../imports';
-import {ClassDeclaration, isNamedClassDeclaration, ReflectionHost, TypeValueReferenceKind} from '../../reflection';
+import {ClassDeclaration, DeclarationNode, isNamedClassDeclaration, ReflectionHost, TypeValueReferenceKind} from '../../reflection';
 
 import {DirectiveMeta, MetadataReader, NgModuleMeta, PipeMeta} from './api';
 import {ClassPropertyMapping} from './property_mapping';
@@ -28,9 +28,10 @@ export class DtsMetadataReader implements MetadataReader {
    *
    * @param ref `Reference` to the class of interest, with the context of how it was obtained.
    */
-  getNgModuleMetadata(ref: Reference<ClassDeclaration>): NgModuleMeta|null {
+  getNgModuleMetadata(ref: Reference<ClassDeclaration>, ownerNode: DeclarationNode): NgModuleMeta
+      |null {
     const clazz = ref.node;
-    const resolutionContext = clazz.getSourceFile().fileName;
+    const resolutionContext = ownerNode.getSourceFile().fileName;
     // This operation is explicitly not memoized, as it depends on `ref.ownedByModuleGuess`.
     // TODO(alxhub): investigate caching of .d.ts module metadata.
     const ngModuleDef = this.reflector.getMembersOfClass(clazz).find(

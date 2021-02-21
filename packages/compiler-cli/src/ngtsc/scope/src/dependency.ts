@@ -10,12 +10,12 @@ import * as ts from 'typescript';
 
 import {AliasingHost, Reference} from '../../imports';
 import {DirectiveMeta, MetadataReader, PipeMeta} from '../../metadata';
-import {ClassDeclaration} from '../../reflection';
+import {ClassDeclaration, DeclarationNode} from '../../reflection';
 
 import {ExportScope} from './api';
 
 export interface DtsModuleScopeResolver {
-  resolve(ref: Reference<ClassDeclaration>): ExportScope|null;
+  resolve(ref: Reference<ClassDeclaration>, ownerNode: DeclarationNode): ExportScope|null;
 }
 
 /**
@@ -43,7 +43,7 @@ export class MetadataDtsModuleScopeResolver implements DtsModuleScopeResolver {
    * This operation relies on a `Reference` instead of a direct TypeScrpt node as the `Reference`s
    * produced depend on how the original NgModule was imported.
    */
-  resolve(ref: Reference<ClassDeclaration>): ExportScope|null {
+  resolve(ref: Reference<ClassDeclaration>, ownerNode: DeclarationNode): ExportScope|null {
     const clazz = ref.node;
     const sourceFile = clazz.getSourceFile();
     if (!sourceFile.isDeclarationFile) {
@@ -60,7 +60,7 @@ export class MetadataDtsModuleScopeResolver implements DtsModuleScopeResolver {
     const pipes: PipeMeta[] = [];
     const ngModules = new Set<ClassDeclaration>([clazz]);
 
-    const meta = this.dtsMetaReader.getNgModuleMetadata(ref);
+    const meta = this.dtsMetaReader.getNgModuleMetadata(ref, ownerNode);
     if (meta === null) {
       this.cache.set(clazz, null);
       return null;
@@ -91,7 +91,7 @@ export class MetadataDtsModuleScopeResolver implements DtsModuleScopeResolver {
       }
 
       // Attempt to process the export as a module.
-      const exportScope = this.resolve(exportRef);
+      const exportScope = this.resolve(exportRef, ref.node);
       if (exportScope !== null) {
         // It is a module. Add exported directives and pipes to the current scope. This might
         // involve rewriting the `Reference`s to those types to have an alias expression if one is

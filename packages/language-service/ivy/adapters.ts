@@ -57,6 +57,26 @@ export class LanguageServiceAdapter implements NgCompilerAdapter {
     return this.project.projectService.toCanonicalFileName(fileName);
   }
 
+  resolveModuleNames?
+      (moduleNames: string[], containingFile: string, reusedNames: string[]|undefined,
+       redirectedReference: ts.ResolvedProjectReference|undefined,
+       options: ts.CompilerOptions): (ts.ResolvedModule|undefined)[] {
+    const res: (ts.ResolvedModule|undefined)[] = [];
+    moduleNames.forEach(name => {
+      const _res =
+          this.project.getResolvedModuleWithFailedLookupLocationsFromCache(name, containingFile);
+      if (_res) {
+        res.push(_res.resolvedModule);
+      } else {
+        res.push(ts.resolveModuleName(
+                       name, containingFile, this.project.getCompilerOptions(), this, undefined,
+                       redirectedReference)
+                     .resolvedModule);
+      }
+    });
+    return res;
+  }
+
   /**
    * Return the real path of a symlink. This method is required in order to
    * resolve symlinks in node_modules.

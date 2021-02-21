@@ -255,7 +255,7 @@ export class LocalModuleScopeRegistry implements MetadataRegistry, ComponentScop
 
     // `ref` should be an NgModule previously added to the registry. If not, a scope for it
     // cannot be produced.
-    const ngModule = this.localReader.getNgModuleMetadata(ref);
+    const ngModule = this.localReader.getNgModuleMetadata(ref, ref.node);
     if (ngModule === null) {
       this.cache.set(ref.node, null);
       return null;
@@ -495,7 +495,7 @@ export class LocalModuleScopeRegistry implements MetadataRegistry, ComponentScop
                 nodeNameForError(ownerForErrors)}, but could not be resolved to an NgModule`));
         return 'invalid';
       }
-      return this.dependencyScopeReader.resolve(ref);
+      return this.dependencyScopeReader.resolve(ref, ownerForErrors);
     } else {
       // The NgModule is declared locally in the current program. Resolve it from the registry.
       return this.getScopeOfModuleReference(ref);

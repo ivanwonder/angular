@@ -9,7 +9,7 @@
 import * as ts from 'typescript';
 
 import {Reference} from '../../imports';
-import {ClassDeclaration, ClassMember, ClassMemberKind, isNamedClassDeclaration, ReflectionHost, reflectTypeEntityToDeclaration} from '../../reflection';
+import {ClassDeclaration, ClassMember, ClassMemberKind, DeclarationNode, isNamedClassDeclaration, ReflectionHost, reflectTypeEntityToDeclaration} from '../../reflection';
 import {nodeDebugInfo} from '../../util/src/typescript';
 
 import {DirectiveMeta, DirectiveTypeCheckMeta, MetadataReader, NgModuleMeta, PipeMeta, TemplateGuardMeta} from './api';
@@ -192,9 +192,11 @@ export class CompoundMetadataReader implements MetadataReader {
     return null;
   }
 
-  getNgModuleMetadata(node: Reference<ClassDeclaration<ts.Declaration>>): NgModuleMeta|null {
+  getNgModuleMetadata(
+      node: Reference<ClassDeclaration<ts.Declaration>>, ownerNode: DeclarationNode): NgModuleMeta
+      |null {
     for (const reader of this.readers) {
-      const meta = reader.getNgModuleMetadata(node);
+      const meta = reader.getNgModuleMetadata(node, ownerNode);
       if (meta !== null) {
         return meta;
       }

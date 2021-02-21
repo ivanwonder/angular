@@ -10,7 +10,7 @@ import {DirectiveMeta as T2DirectiveMeta, SchemaMetadata} from '@angular/compile
 import * as ts from 'typescript';
 
 import {Reference} from '../../imports';
-import {ClassDeclaration} from '../../reflection';
+import {ClassDeclaration, DeclarationNode} from '../../reflection';
 
 import {ClassPropertyMapping, ClassPropertyName} from './property_mapping';
 
@@ -154,7 +154,8 @@ export interface PipeMeta {
  */
 export interface MetadataReader {
   getDirectiveMetadata(node: Reference<ClassDeclaration>): DirectiveMeta|null;
-  getNgModuleMetadata(node: Reference<ClassDeclaration>): NgModuleMeta|null;
+  getNgModuleMetadata(node: Reference<ClassDeclaration>, ownerNode: DeclarationNode): NgModuleMeta
+      |null;
   getPipeMetadata(node: Reference<ClassDeclaration>): PipeMeta|null;
 }
 

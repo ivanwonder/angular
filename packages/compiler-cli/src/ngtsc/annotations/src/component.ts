@@ -564,17 +564,18 @@ export class ComponentDecoratorHandler implements
 
       // Scan through the directives/pipes actually used in the template and check whether any
       // import which needs to be generated would create a cycle.
-      const cycleDetected = usedDirectives.some(dir => this._isCyclicImport(dir.type, context)) ||
-          usedPipes.some(pipe => this._isCyclicImport(pipe.expression, context));
+      const cycleDetected =
+          usedDirectives.some(dir => this._isCyclicImport(dir.type, context, dir.ref)) ||
+          usedPipes.some(pipe => this._isCyclicImport(pipe.expression, context, pipe.ref));
 
       if (!cycleDetected) {
         // No cycle was detected. Record the imports that need to be created in the cycle detector
         // so that future cyclic import checks consider their production.
-        for (const {type} of usedDirectives) {
-          this._recordSyntheticImport(type, context);
+        for (const {type, ref} of usedDirectives) {
+          this._recordSyntheticImport(type, context, ref);
         }
-        for (const {expression} of usedPipes) {
-          this._recordSyntheticImport(expression, context);
+        for (const {expression, ref} of usedPipes) {
+          this._recordSyntheticImport(expression, context, ref);
         }
 
         // Check whether the directive/pipe arrays in ɵcmp need to be wrapped in closures.
@@ -1043,17 +1044,19 @@ export class ComponentDecoratorHandler implements
     }
   }
 
-  private _expressionToImportedFile(expr: Expression, origin: ts.SourceFile): ts.SourceFile|null {
+  private _expressionToImportedFile(expr: Expression, fileName: string): ts.SourceFile|null {
     if (!(expr instanceof ExternalExpr)) {
       return null;
     }
 
     // Figure out what file is being imported.
-    return this.moduleResolver.resolveModule(expr.value.moduleName!, origin.fileName);
+    return this.moduleResolver.resolveModule(expr.value.moduleName!, fileName);
   }
 
-  private _isCyclicImport(expr: Expression, origin: ts.SourceFile): boolean {
-    const imported = this._expressionToImportedFile(expr, origin);
+  private _isCyclicImport(expr: Expression, origin: ts.SourceFile, ref: Reference<ts.Node>):
+      boolean {
+    const imported = this._expressionToImportedFile(
+        expr, ref.bestGuessOwningModule?.resolutionContext || origin.getSourceFile().fileName);
     if (imported === null) {
       return false;
     }
@@ -1062,8 +1065,10 @@ export class ComponentDecoratorHandler implements
     return this.cycleAnalyzer.wouldCreateCycle(origin, imported);
   }
 
-  private _recordSyntheticImport(expr: Expression, origin: ts.SourceFile): void {
-    const imported = this._expressionToImportedFile(expr, origin);
+  private _recordSyntheticImport(expr: Expression, origin: ts.SourceFile, ref: Reference<ts.Node>):
+      void {
+    const imported = this._expressionToImportedFile(
+        expr, ref.bestGuessOwningModule?.resolutionContext || origin.getSourceFile().fileName);
     if (imported === null) {
       return;
     }
