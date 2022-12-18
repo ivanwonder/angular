@@ -27,6 +27,15 @@ export function create(info: ts.server.PluginCreateInfo): NgLanguageService {
     return diagnostics;
   }
 
+  function getSuggestionDiagnostics(fileName: string): ts.DiagnosticWithLocation[] {
+    const diagnostics: ts.DiagnosticWithLocation[] = [];
+    if (!angularOnly) {
+      diagnostics.push(...tsLS.getSuggestionDiagnostics(fileName));
+    }
+    diagnostics.push(...ngLS.getSuggestionDiagnostics(fileName));
+    return diagnostics;
+  }
+
   function getQuickInfoAtPosition(fileName: string, position: number): ts.QuickInfo|undefined {
     if (angularOnly) {
       return ngLS.getQuickInfoAtPosition(fileName, position);
@@ -199,6 +208,7 @@ export function create(info: ts.server.PluginCreateInfo): NgLanguageService {
   return {
     ...tsLS,
     getSemanticDiagnostics,
+    getSuggestionDiagnostics,
     getTypeDefinitionAtPosition,
     getQuickInfoAtPosition,
     getDefinitionAndBoundSpan,

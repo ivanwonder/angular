@@ -23,11 +23,11 @@ export function makeTemplateDiagnostic(
       start: number,
       end: number,
       sourceFile: ts.SourceFile,
-    }[]): TemplateDiagnostic {
+    }[],
+    diagnostic?: ts.Diagnostic): TemplateDiagnostic {
   if (mapping.type === 'direct') {
-    let relatedInformation: ts.DiagnosticRelatedInformation[]|undefined = undefined;
+    let relatedInformation: ts.DiagnosticRelatedInformation[]|undefined = [];
     if (relatedMessages !== undefined) {
-      relatedInformation = [];
       for (const relatedMessage of relatedMessages) {
         relatedInformation.push({
           category: ts.DiagnosticCategory.Message,
@@ -39,6 +39,12 @@ export function makeTemplateDiagnostic(
         });
       }
     }
+
+    if (diagnostic?.reportsDeprecated !== undefined &&
+        diagnostic.relatedInformation !== undefined) {
+      relatedInformation.push(...diagnostic.relatedInformation)
+    }
+
     // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
     // constant within the `@Component` decorator for the template. This allows us to map the error
     // directly into the bytes of the source file.
@@ -53,6 +59,7 @@ export function makeTemplateDiagnostic(
       start: span.start.offset,
       length: span.end.offset - span.start.offset,
       relatedInformation,
+      reportsDeprecated: diagnostic?.reportsDeprecated,
     };
   } else if (mapping.type === 'indirect' || mapping.type === 'external') {
     // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
@@ -102,7 +109,13 @@ export function makeTemplateDiagnostic(
         start: mapping.node.getStart(),
         length: mapping.node.getEnd() - mapping.node.getStart(),
         relatedInformation,
+        reportsDeprecated: diagnostic?.reportsDeprecated,
       };
+    }
+
+    if (diagnostic?.reportsDeprecated !== undefined &&
+        diagnostic.relatedInformation !== undefined) {
+      relatedInformation.push(...diagnostic.relatedInformation)
     }
 
     relatedInformation.push({
@@ -128,6 +141,7 @@ export function makeTemplateDiagnostic(
       length: span.end.offset - span.start.offset,
       // Show a secondary message indicating the component whose template contains the error.
       relatedInformation,
+      reportsDeprecated: diagnostic?.reportsDeprecated,
     };
   } else {
     throw new Error(`Unexpected source mapping type: ${(mapping as {type: string}).type}`);

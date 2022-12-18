@@ -103,5 +103,5 @@ export function translateDiagnostic(
   const {sourceLocation, templateSourceMapping, span} = fullMapping;
   return makeTemplateDiagnostic(
       sourceLocation.id, templateSourceMapping, span, diagnostic.category, diagnostic.code,
-      diagnostic.messageText);
+      diagnostic.messageText, undefined, diagnostic);
 }

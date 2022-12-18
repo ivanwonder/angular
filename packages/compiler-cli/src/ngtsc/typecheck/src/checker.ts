@@ -250,6 +250,41 @@ export class TemplateTypeCheckerImpl implements TemplateTypeChecker {
     });
   }
 
+  getSuggestionDiagnosticsForFile(sf: ts.SourceFile, optimizeFor: OptimizeFor):
+      ts.DiagnosticWithLocation[] {
+    switch (optimizeFor) {
+      case OptimizeFor.WholeProgram:
+        this.ensureAllShimsForAllFiles();
+        break;
+      case OptimizeFor.SingleFile:
+        this.ensureAllShimsForOneFile(sf);
+        break;
+    }
+
+    return this.perf.inPhase(PerfPhase.TtcSuggestionDiagnostics, () => {
+      const sfPath = absoluteFromSourceFile(sf);
+      const fileRecord = this.state.get(sfPath)!;
+
+      const typeCheckProgram = this.programDriver.getProgram();
+
+      const diagnostics: (ts.DiagnosticWithLocation|null)[] = [];
+
+      if (fileRecord.hasInlines) {
+        const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
+        diagnostics.push(...getSuggestionDiagnostics(typeCheckProgram, inlineSf)
+                             .map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+      }
+
+      for (const [shimPath] of fileRecord.shimData) {
+        const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
+        diagnostics.push(...getSuggestionDiagnostics(typeCheckProgram, shimSf)
+                             .map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+      }
+
+      return diagnostics.filter((diag): diag is ts.DiagnosticWithLocation => diag !== null);
+    });
+  }
+
   getDiagnosticsForComponent(component: ts.ClassDeclaration): ts.Diagnostic[] {
     this.ensureShimForComponent(component);
 
@@ -284,6 +319,44 @@ export class TemplateTypeCheckerImpl implements TemplateTypeChecker {
       for (const templateData of shimRecord.templates.values()) {
         diagnostics.push(...templateData.templateDiagnostics);
       }
+
+      return diagnostics.filter(
+          (diag: TemplateDiagnostic|null): diag is TemplateDiagnostic =>
+              diag !== null && diag.templateId === templateId);
+    });
+  }
+
+  getSuggestionDiagnosticsForComponent(component: ts.ClassDeclaration):
+      ts.DiagnosticWithLocation[] {
+    this.ensureShimForComponent(component);
+
+    return this.perf.inPhase(PerfPhase.TtcSuggestionDiagnostics, () => {
+      const sf = component.getSourceFile();
+      const sfPath = absoluteFromSourceFile(sf);
+      const shimPath = TypeCheckShimGenerator.shimFor(sfPath);
+
+      const fileRecord = this.getFileData(sfPath);
+
+      if (!fileRecord.shimData.has(shimPath)) {
+        return [];
+      }
+
+      const templateId = fileRecord.sourceManager.getTemplateId(component);
+      const shimRecord = fileRecord.shimData.get(shimPath)!;
+
+      const typeCheckProgram = this.programDriver.getProgram();
+
+      const diagnostics: (TemplateDiagnostic|null)[] = [];
+
+      if (shimRecord.hasInlines) {
+        const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
+        diagnostics.push(...getSuggestionDiagnostics(typeCheckProgram, inlineSf)
+                             .map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+      }
+
+      const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
+      diagnostics.push(...getSuggestionDiagnostics(typeCheckProgram, shimSf)
+                           .map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
 
       return diagnostics.filter(
           (diag: TemplateDiagnostic|null): diag is TemplateDiagnostic =>
@@ -1022,4 +1095,19 @@ interface ScopeData {
   directives: PotentialDirective[];
   pipes: PotentialPipe[];
   isPoisoned: boolean;
+}
+
+/**
+ * `getSuggestionDiagnostics` is part of `ts.Program`'s private API, but it's exposed at
+ * Typescript's language service.
+ *
+ * This does *not* get *all* suggestion diagnostics, just the ones
+ * that were convenient to report in the checker. Others are added in the Typescript's Language
+ * Service.
+ *
+ * https://github.com/microsoft/TypeScript/blob/4932c8788b9a0737d54a17a1d7c613b8f4daa6c2/src/compiler/types.ts#L5225-L5231
+ */
+function getSuggestionDiagnostics(
+    program: ts.Program, sourceFile: ts.SourceFile): ts.DiagnosticWithLocation[] {
+  return (program as any).getSuggestionDiagnostics(sourceFile);
 }

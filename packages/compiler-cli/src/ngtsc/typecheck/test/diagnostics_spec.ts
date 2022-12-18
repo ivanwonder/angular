@@ -613,6 +613,33 @@ class TestComponent {
     });
   });
 
+  describe('suggestion diagnostics', () => {
+    it('should work for the template', () => {
+      const messages = diagnose(
+          `<div dir [input]="person.name"></div>`, `
+        class Dir {
+        /**
+         * @deprecated
+         */
+          input: string;
+        }
+        class TestComponent {
+          person: {
+            name: string;
+          };
+        }`,
+          [{
+            type: 'directive',
+            name: 'Dir',
+            selector: '[dir]',
+            exportAs: ['dir'],
+            inputs: {input: 'input'},
+          }]);
+
+      expect(messages).toEqual([`TestComponent.html(1, 11): 'input' is deprecated.`]);
+    });
+  });
+
   describe('method call spans', () => {
     it('reports invalid method name on method name span', () => {
       const messages = diagnose(`{{ person.getNName() }}`, `
@@ -1202,7 +1229,10 @@ function diagnose(
       ],
       {config, options});
   const sf = getSourceFileOrError(program, sfPath);
-  const diagnostics = templateTypeChecker.getDiagnosticsForFile(sf, OptimizeFor.WholeProgram);
+  const diagnostics: ts.Diagnostic[] = [];
+  diagnostics.push(...templateTypeChecker.getDiagnosticsForFile(sf, OptimizeFor.WholeProgram));
+  diagnostics.push(
+      ...templateTypeChecker.getSuggestionDiagnosticsForFile(sf, OptimizeFor.WholeProgram));
   return diagnostics.map(diag => {
     const text = ts.flattenDiagnosticMessageText(diag.messageText, '\n');
     const fileName = diag.file!.fileName;

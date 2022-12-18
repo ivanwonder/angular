@@ -36,7 +36,7 @@ export type TemplateId = string&{__brand: 'TemplateId'};
  * A `ts.Diagnostic` with additional information about the diagnostic related to template
  * type-checking.
  */
-export interface TemplateDiagnostic extends ts.Diagnostic {
+export interface TemplateDiagnostic extends ts.DiagnosticWithLocation {
   /**
    * The component with the template that resulted in this diagnostic.
    */
